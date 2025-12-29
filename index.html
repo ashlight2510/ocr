@@ -3,222 +3,835 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>사진 글자 추출 · 파일 이름 일괄 변경</title>
+    <title>사진 글자 추출 - OCR</title>
 
     <!-- SEO -->
     <meta
       name="description"
-      content="사진에서 글자 추출(OCR) + 파일 이름 일괄 변경. 설치 없이 무료로 바로 사용하세요."
+      content="사진에서 글자 추출(OCR). 설치 없이 무료로 바로 사용하세요."
     />
     <meta
       name="keywords"
-      content="사진 글자 추출, 이미지 텍스트 변환, OCR, 파일 이름 변경, 파일명 일괄 변경"
+      content="사진 글자 추출, 이미지 텍스트 변환, OCR, 텍스트 추출"
     />
 
     <!-- OG -->
-    <meta property="og:title" content="사진 글자 추출 · 파일 이름 일괄 변경" />
+    <meta property="og:title" content="사진 글자 추출 - OCR" />
     <meta
       property="og:description"
-      content="이미지에서 글자 복사, 여러 파일 이름을 한 번에 변경하세요."
+      content="이미지에서 글자를 자동으로 읽어 추출하세요."
     />
     <meta
       property="og:image"
-      content="https://dummyimage.com/1200x630/0b1220/ffffff&text=OCR+%26+Rename"
+      content="https://dummyimage.com/1200x630/0b1220/ffffff&text=OCR"
+    />
+
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><defs><linearGradient id="g" x1="0%" y1="100%" x2="100%" y2="0%"><stop offset="0%" stop-color="%230b1220"/><stop offset="100%" stop-color="%2322c55e"/></linearGradient></defs><rect width="64" height="64" rx="12" fill="url(%23g)"/><rect x="10" y="18" width="44" height="28" rx="6" fill="rgba(255,255,255,0.12)" stroke="%239efac9" stroke-width="2"/><path d="M16 27h10v10H16z" fill="none" stroke="%239efac9" stroke-width="2.5"/><path d="M36 23h12M36 31h12M36 39h12" stroke="%23e9fff3" stroke-width="2.5" stroke-linecap="round"/><circle cx="26" cy="32" r="2" fill="%23e9fff3"/></svg>'
     />
 
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 
     <style>
       body {
         background: #0b1220;
         color: white;
       }
-      .tab-active {
-        background: #22c55e;
-        color: #0b1220;
+      #previewCanvas {
+        cursor: pointer;
       }
     </style>
   </head>
 
-  <body class="max-w-4xl mx-auto px-4 py-10">
-    <h1 class="text-3xl font-extrabold mb-6">
-      📸 사진 글자 추출 & 📁 파일 이름 변경
-    </h1>
-
-    <!-- Tabs -->
-    <div class="flex gap-2 mb-6">
-      <button id="tabOcr" class="px-4 py-2 rounded tab-active">
-        이미지 → 텍스트
-      </button>
-      <button id="tabRename" class="px-4 py-2 rounded bg-white/10">
-        파일 이름 변경
-      </button>
+  <body class="max-w-5xl mx-auto px-4 py-8">
+    <div class="text-center mb-8">
+      <h1
+        class="text-4xl font-extrabold mb-2 bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent"
+      >
+        이미지 텍스트 추출
+      </h1>
+      <p class="text-white/60">사진에서 글자를 자동으로 읽어 추출합니다</p>
+      <div class="mt-4">
+        <a
+          href="https://funnyfunny.cloud/"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-white/10 border border-white/20 text-white hover:border-green-400 hover:text-green-100 transition-colors"
+        >
+          다른 서비스 보기
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-4 w-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M17 7l-9.5 9.5M7 7h10v10"
+            />
+          </svg>
+        </a>
+      </div>
     </div>
 
     <!-- OCR -->
-    <section id="ocrSection">
-      <div class="bg-white/5 border border-white/10 rounded-xl p-4">
-        <input type="file" id="ocrInput" accept="image/*" />
-        <button
-          id="ocrBtn"
-          class="mt-3 px-4 py-2 rounded bg-green-500 text-black font-semibold"
+    <section>
+      <div class="bg-white/5 border border-white/10 rounded-xl p-6 shadow-lg">
+        <label class="block mb-4">
+          <div
+            class="flex items-center justify-center w-full h-32 border-2 border-dashed border-white/20 rounded-lg cursor-pointer hover:border-green-500/50 transition-colors"
+          >
+            <div class="text-center">
+              <svg
+                class="mx-auto h-12 w-12 text-white/40 mb-2"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                ></path>
+              </svg>
+              <p class="text-sm text-white/60">
+                이미지를 선택하거나 클릭하여 업로드
+              </p>
+              <p class="text-xs text-white/40 mt-1">
+                PNG, JPG, JPEG 지원 · Ctrl+V (Cmd+V)로 붙여넣기 가능
+              </p>
+            </div>
+            <input type="file" id="ocrInput" accept="image/*" class="hidden" />
+          </div>
+        </label>
+
+        <div
+          id="ocrStatus"
+          class="text-sm text-white/70 mt-2 text-center"
+        ></div>
+
+        <div id="imagePreview" class="mt-4 mb-4 relative" style="display: none">
+          <div style="position: relative; display: inline-block">
+            <canvas
+              id="previewCanvas"
+              class="max-w-full h-auto border border-white/10 rounded"
+              style="display: block"
+            ></canvas>
+            <canvas
+              id="overlayCanvas"
+              style="
+                position: absolute;
+                top: 0;
+                left: 0;
+                pointer-events: auto;
+                cursor: pointer;
+                max-width: 100%;
+                height: auto;
+                z-index: 10;
+                background: transparent;
+              "
+            ></canvas>
+          </div>
+        </div>
+
+        <!-- 선택된 텍스트 영역 수정 폼 -->
+        <div
+          id="textEditSection"
+          class="mt-6 bg-white/5 border border-white/10 rounded-xl p-4"
+          style="display: none"
         >
-          텍스트 추출
-        </button>
+          <h3 class="text-lg font-bold mb-4 text-white/90">텍스트 수정</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- 왼쪽: 이미지 영역 미리보기 -->
+            <div>
+              <label class="text-sm text-white/70 mb-2 block"
+                >이미지 영역</label
+              >
+              <div
+                class="bg-black/30 border border-white/10 rounded p-3 min-h-[200px] flex items-center justify-center"
+              >
+                <canvas
+                  id="previewRegionCanvas"
+                  class="max-w-full h-auto border border-white/20 rounded"
+                ></canvas>
+              </div>
+            </div>
 
-        <div id="ocrStatus" class="text-sm text-white/70 mt-3"></div>
+            <!-- 오른쪽: 텍스트 수정 영역 -->
+            <div class="flex flex-col">
+              <label class="text-sm text-white/70 mb-2">텍스트 내용</label>
+              <textarea
+                id="regionTextInput"
+                class="flex-1 w-full p-3 bg-black/30 border border-white/10 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none"
+                placeholder="텍스트를 수정하세요..."
+                onkeydown="if(event.key === 'Enter' && (event.ctrlKey || event.metaKey)) { event.preventDefault(); saveRegionText(); }"
+              ></textarea>
+              <div class="flex gap-3 mt-4">
+                <button
+                  onclick="saveRegionText()"
+                  class="px-4 py-2 rounded-lg bg-green-500 hover:bg-green-600 text-white font-medium transition-colors flex-1"
+                >
+                  저장
+                </button>
+                <button
+                  onclick="clearRegionSelection()"
+                  class="px-4 py-2 rounded-lg bg-gray-500 hover:bg-gray-600 text-white font-medium transition-colors flex-1"
+                >
+                  취소
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
 
-        <textarea
-          id="ocrResult"
-          class="w-full h-40 mt-4 p-3 bg-black/30 border border-white/10 rounded"
-          placeholder="추출된 텍스트가 여기에 표시됩니다"
-        ></textarea>
+        <div class="mt-6">
+          <div class="flex items-center justify-between mb-2">
+            <label class="text-sm font-medium text-white/80"
+              >추출된 텍스트</label
+            >
+            <button
+              onclick="copyToClipboard()"
+              class="px-4 py-2 rounded-lg bg-green-500 hover:bg-green-600 text-white font-medium text-sm transition-colors flex items-center gap-2"
+            >
+              <svg
+                class="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                ></path>
+              </svg>
+              클립보드로 복사
+            </button>
+          </div>
+          <textarea
+            id="ocrResult"
+            class="w-full h-48 mt-2 p-4 bg-black/30 border border-white/10 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none"
+            placeholder="추출된 텍스트가 여기에 표시됩니다..."
+          ></textarea>
+        </div>
 
-        <button onclick="copyText()" class="mt-2 px-3 py-1 rounded bg-white/10">
-          📋 복사
-        </button>
-      </div>
-    </section>
-
-    <!-- Rename -->
-    <section id="renameSection" class="hidden">
-      <div class="bg-white/5 border border-white/10 rounded-xl p-4 space-y-4">
-        <input type="file" id="renameInput" multiple />
-
-        <select
-          id="rule"
-          class="w-full p-2 rounded bg-black/30 border border-white/10"
-        >
-          <option value="date">날짜_번호</option>
-          <option value="prefix">Prefix_번호</option>
-          <option value="number">번호만</option>
-        </select>
-
-        <input
-          id="prefixInput"
-          placeholder="prefix 입력 (옵션)"
-          class="w-full p-2 rounded bg-black/30 border border-white/10"
-        />
-
-        <ul id="preview" class="text-sm text-white/70"></ul>
-
-        <button
-          id="zipBtn"
-          class="px-4 py-2 rounded bg-green-500 text-black font-semibold"
-        >
-          ZIP 다운로드
-        </button>
+        <div class="mt-4 flex gap-3">
+          <button
+            id="downloadBtn"
+            onclick="downloadImage()"
+            class="px-4 py-2 rounded-lg bg-green-500 hover:bg-green-600 text-white font-medium transition-colors flex-1"
+            style="display: none"
+          >
+            이미지 다운로드
+          </button>
+        </div>
       </div>
     </section>
 
     <script>
-      /* Tabs */
-      const tabOcr = document.getElementById("tabOcr");
-      const tabRename = document.getElementById("tabRename");
-      const ocrSection = document.getElementById("ocrSection");
-      const renameSection = document.getElementById("renameSection");
-
-      tabOcr.onclick = () => {
-        tabOcr.classList.add("tab-active");
-        tabRename.classList.remove("tab-active");
-        ocrSection.classList.remove("hidden");
-        renameSection.classList.add("hidden");
-      };
-      tabRename.onclick = () => {
-        tabRename.classList.add("tab-active");
-        tabOcr.classList.remove("tab-active");
-        renameSection.classList.remove("hidden");
-        ocrSection.classList.add("hidden");
-      };
-
       /* OCR */
-      document.getElementById("ocrBtn").onclick = async () => {
-        const file = document.getElementById("ocrInput").files[0];
-        if (!file) return alert("이미지를 선택하세요");
+      let worker = null;
+      let originalImageData = null;
+      let ocrData = null;
+      let textRegions = [];
+      let selectedRegionIndex = -1;
 
-        const status = document.getElementById("ocrStatus");
-        status.textContent = "글자 읽는 중...";
+      // OCR 텍스트 정리 함수 (인식률 향상을 위해 덜 공격적으로 정리)
+      function cleanOcrText(text) {
+        if (!text) return "";
 
-        const { data } = await Tesseract.recognize(file, "kor+eng");
-        document.getElementById("ocrResult").value = data.text;
-        status.textContent = "완료!";
-      };
+        return text
+          .split("\n")
+          .map((line) => {
+            // 라인 단위 정리 (덜 공격적으로)
+            let cleaned = line
+              // 연속된 공백을 하나로
+              .replace(/\s{2,}/g, " ")
+              // 앞뒤 공백 제거
+              .trim();
 
-      function copyText() {
-        const ta = document.getElementById("ocrResult");
-        ta.select();
-        document.execCommand("copy");
-        alert("복사됨");
+            // 의미없는 텍스트 필터링
+            if (cleaned.length < 1) return "";
+
+            // 너무 짧은 단독 영문만 있는 경우 제거 (2글자 이하)
+            if (/^[a-zA-Z]{1,2}$/.test(cleaned)) return "";
+
+            return cleaned;
+          })
+          .filter((line) => line.length > 0) // 빈 라인 제거
+          .join("\n");
       }
 
-      /* Rename */
-      document.getElementById("renameInput").onchange = previewNames;
-      document.getElementById("rule").onchange = previewNames;
-      document.getElementById("prefixInput").oninput = previewNames;
+      // 텍스트 영역 클릭 이벤트 처리
+      function handleCanvasClick(e) {
+        const canvas =
+          e.target.id === "overlayCanvas"
+            ? document.getElementById("overlayCanvas")
+            : document.getElementById("previewCanvas");
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
 
-      function previewNames() {
-        const files = [...document.getElementById("renameInput").files];
-        const rule = document.getElementById("rule").value;
-        const prefix = document.getElementById("prefixInput").value;
-        const ul = document.getElementById("preview");
-        ul.innerHTML = "";
+        const x = (e.clientX - rect.left) * scaleX;
+        const y = (e.clientY - rect.top) * scaleY;
 
-        files.forEach((f, i) => {
-          const ext = f.name.split(".").pop();
-          let name = "";
+        // 클릭한 영역 찾기
+        for (let i = textRegions.length - 1; i >= 0; i--) {
+          const region = textRegions[i];
+          if (
+            x >= region.x0 &&
+            x <= region.x1 &&
+            y >= region.y0 &&
+            y <= region.y1
+          ) {
+            selectedRegionIndex = i;
+            drawBoundingBoxes();
+            showRegionPreview(region);
+            break;
+          }
+        }
+      }
 
-          if (rule === "date") {
-            const d = new Date().toISOString().slice(0, 10);
-            name = `${d}_${String(i + 1).padStart(2, "0")}.${ext}`;
-          } else if (rule === "prefix") {
-            name = `${prefix || "file"}_${String(i + 1).padStart(
-              2,
-              "0"
-            )}.${ext}`;
+      // 바운딩 박스 그리기 (원본 캔버스에 직접 그리기)
+      function drawBoundingBoxes() {
+        const canvas = document.getElementById("previewCanvas");
+        if (!canvas || !originalImageData) return;
+
+        const ctx = canvas.getContext("2d");
+
+        // 원본 이미지 다시 그리기
+        ctx.putImageData(originalImageData, 0, 0);
+
+        if (textRegions.length === 0) {
+          return;
+        }
+
+        // 각 텍스트 영역에 바운딩 박스 그리기
+        textRegions.forEach((region, index) => {
+          const width = region.x1 - region.x0;
+          const height = region.y1 - region.y0;
+
+          if (index === selectedRegionIndex) {
+            // 선택된 영역 - 파란색 (더 두껍게)
+            ctx.strokeStyle = "#3b82f6";
+            ctx.lineWidth = 4;
+            ctx.setLineDash([]);
           } else {
-            name = `${String(i + 1).padStart(2, "0")}.${ext}`;
+            // 일반 영역 - 초록색 (더 두껍게)
+            ctx.strokeStyle = "#22c55e";
+            ctx.lineWidth = 3;
+            ctx.setLineDash([]);
           }
 
-          ul.innerHTML += `<li>${f.name} → <b>${name}</b></li>`;
+          // 바운딩 박스 그리기
+          ctx.strokeRect(region.x0, region.y0, width, height);
+
+          // 배경을 반투명하게 칠하기 (더 잘 보이도록)
+          ctx.fillStyle =
+            index === selectedRegionIndex
+              ? "rgba(59, 130, 246, 0.2)"
+              : "rgba(34, 197, 94, 0.2)";
+          ctx.fillRect(region.x0, region.y0, width, height);
         });
       }
 
-      document.getElementById("zipBtn").onclick = async () => {
-        const files = [...document.getElementById("renameInput").files];
-        if (!files.length) return alert("파일 없음");
+      // 선택된 영역 미리보기 표시
+      function showRegionPreview(region) {
+        const canvas = document.getElementById("previewCanvas");
+        const previewCanvas = document.getElementById("previewRegionCanvas");
+        const editSection = document.getElementById("textEditSection");
+        const input = document.getElementById("regionTextInput");
 
-        const zip = new JSZip();
-        const rule = document.getElementById("rule").value;
-        const prefix = document.getElementById("prefixInput").value;
+        if (!previewCanvas || !canvas || !originalImageData) return;
 
-        for (let i = 0; i < files.length; i++) {
-          const f = files[i];
-          const ext = f.name.split(".").pop();
-          let name = "";
+        // 원본 이미지에서 해당 영역만 추출
+        const ctx = previewCanvas.getContext("2d");
+        const sourceCtx = canvas.getContext("2d");
 
-          if (rule === "date") {
-            const d = new Date().toISOString().slice(0, 10);
-            name = `${d}_${String(i + 1).padStart(2, "0")}.${ext}`;
-          } else if (rule === "prefix") {
-            name = `${prefix || "file"}_${String(i + 1).padStart(
-              2,
-              "0"
-            )}.${ext}`;
-          } else {
-            name = `${String(i + 1).padStart(2, "0")}.${ext}`;
-          }
+        // 원본 이미지 데이터 복원
+        sourceCtx.putImageData(originalImageData, 0, 0);
 
-          zip.file(name, f);
+        // 영역 크기 계산 (약간의 패딩 추가)
+        const padding = 10;
+        const x0 = Math.max(0, region.x0 - padding);
+        const y0 = Math.max(0, region.y0 - padding);
+        const x1 = Math.min(canvas.width, region.x1 + padding);
+        const y1 = Math.min(canvas.height, region.y1 + padding);
+        const width = x1 - x0;
+        const height = y1 - y0;
+
+        // 미리보기 캔버스 크기 설정
+        const maxPreviewSize = 400;
+        let previewWidth = width;
+        let previewHeight = height;
+
+        if (width > maxPreviewSize || height > maxPreviewSize) {
+          const scale = Math.min(
+            maxPreviewSize / width,
+            maxPreviewSize / height
+          );
+          previewWidth = Math.round(width * scale);
+          previewHeight = Math.round(height * scale);
         }
 
-        const blob = await zip.generateAsync({ type: "blob" });
-        const a = document.createElement("a");
-        a.href = URL.createObjectURL(blob);
-        a.download = "renamed_files.zip";
-        a.click();
+        previewCanvas.width = previewWidth;
+        previewCanvas.height = previewHeight;
+
+        // 이미지 영역 추출 및 확대/축소
+        const imageData = sourceCtx.getImageData(x0, y0, width, height);
+        const tempCanvas = document.createElement("canvas");
+        tempCanvas.width = width;
+        tempCanvas.height = height;
+        const tempCtx = tempCanvas.getContext("2d");
+        tempCtx.putImageData(imageData, 0, 0);
+
+        // 미리보기 캔버스에 그리기
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = "high";
+        ctx.drawImage(tempCanvas, 0, 0, previewWidth, previewHeight);
+
+        // 바운딩 박스 그리기
+        const scaleX = previewWidth / width;
+        const scaleY = previewHeight / height;
+        const boxX = padding * scaleX;
+        const boxY = padding * scaleY;
+        const boxW = (region.x1 - region.x0) * scaleX;
+        const boxH = (region.y1 - region.y0) * scaleY;
+
+        ctx.strokeStyle = "#3b82f6";
+        ctx.lineWidth = 2;
+        ctx.strokeRect(boxX, boxY, boxW, boxH);
+
+        // 텍스트 입력 필드에 현재 텍스트 표시
+        input.value = region.text;
+        input.focus();
+        input.select();
+
+        // 수정 섹션 표시
+        editSection.style.display = "block";
+
+        // 스크롤하여 수정 섹션으로 이동
+        editSection.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      }
+
+      // 선택된 영역 텍스트 저장
+      function saveRegionText() {
+        if (selectedRegionIndex < 0) return;
+
+        const input = document.getElementById("regionTextInput");
+        const newText = input.value.trim();
+
+        textRegions[selectedRegionIndex].text = newText;
+
+        // 전체 텍스트 업데이트
+        const fullText = textRegions.map((r) => r.text).join("\n");
+        document.getElementById("ocrResult").value = fullText;
+
+        // 바운딩 박스 다시 그리기
+        drawBoundingBoxes();
+
+        showNotification("텍스트가 저장되었습니다!", "success");
+      }
+
+      // 선택 해제
+      function clearRegionSelection() {
+        selectedRegionIndex = -1;
+        const editSection = document.getElementById("textEditSection");
+        editSection.style.display = "none";
+        drawBoundingBoxes();
+      }
+
+      // 이미지 전처리 함수 (OCR 인식률 향상)
+      function preprocessImage(canvas) {
+        const ctx = canvas.getContext("2d");
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const data = imageData.data;
+
+        // 그레이스케일 변환 및 대비 향상
+        for (let i = 0; i < data.length; i += 4) {
+          // 그레이스케일 변환
+          const gray =
+            data[i] * 0.299 + data[i + 1] * 0.587 + data[i + 2] * 0.114;
+
+          // 대비 향상 (명도 조정)
+          let enhanced = gray;
+          if (gray < 128) {
+            // 어두운 부분을 더 어둡게
+            enhanced = gray * 0.8;
+          } else {
+            // 밝은 부분을 더 밝게
+            enhanced = 128 + (gray - 128) * 1.2;
+          }
+
+          // 클램핑
+          enhanced = Math.max(0, Math.min(255, enhanced));
+
+          data[i] = enhanced; // R
+          data[i + 1] = enhanced; // G
+          data[i + 2] = enhanced; // B
+          // data[i + 3]는 alpha, 그대로 유지
+        }
+
+        ctx.putImageData(imageData, 0, 0);
+        return canvas;
+      }
+
+      // 이미지 처리 함수 (파일 또는 Blob)
+      async function processImage(file) {
+        if (!file) return;
+
+        const status = document.getElementById("ocrStatus");
+        const previewDiv = document.getElementById("imagePreview");
+        const canvas = document.getElementById("previewCanvas");
+        const ctx = canvas.getContext("2d");
+        const resultTextarea = document.getElementById("ocrResult");
+        const downloadBtn = document.getElementById("downloadBtn");
+
+        // 버튼 숨기기
+        downloadBtn.style.display = "none";
+
+        // 이미지 미리보기 설정
+        const img = new Image();
+        const imgUrl = URL.createObjectURL(file);
+        img.onload = async () => {
+          // 이미지 크기 조정 (너무 작으면 확대)
+          let targetWidth = img.width;
+          let targetHeight = img.height;
+          const minSize = 300;
+
+          if (targetWidth < minSize || targetHeight < minSize) {
+            const scale = Math.max(
+              minSize / targetWidth,
+              minSize / targetHeight
+            );
+            targetWidth = Math.round(targetWidth * scale);
+            targetHeight = Math.round(targetHeight * scale);
+          }
+
+          canvas.width = targetWidth;
+          canvas.height = targetHeight;
+
+          // 고품질 이미지 그리기
+          ctx.imageSmoothingEnabled = true;
+          ctx.imageSmoothingQuality = "high";
+          ctx.drawImage(img, 0, 0, targetWidth, targetHeight);
+
+          // 원본 이미지 데이터 저장 (전처리 전)
+          originalImageData = ctx.getImageData(
+            0,
+            0,
+            canvas.width,
+            canvas.height
+          );
+
+          // 이미지 전처리 (OCR 인식률 향상)
+          status.textContent = "이미지 전처리 중...";
+          preprocessImage(canvas);
+
+          previewDiv.style.display = "block";
+          URL.revokeObjectURL(imgUrl);
+
+          // OCR 실행
+          status.textContent = "글자 읽는 중...";
+
+          if (!worker) {
+            worker = await Tesseract.createWorker("kor+eng");
+            // OCR 설정 최적화
+            await worker.setParameters({
+              tessedit_pageseg_mode: "6", // 단일 블록으로 인식
+              tessedit_char_whitelist: "", // 모든 문자 허용
+            });
+          }
+
+          // 전처리된 이미지를 Blob으로 변환하여 OCR 실행
+          canvas.toBlob(async (blob) => {
+            try {
+              const { data } = await worker.recognize(blob);
+              ocrData = data;
+
+              // 텍스트 영역 초기화
+              textRegions = [];
+              selectedRegionIndex = -1;
+
+              const scaleX = canvas.width / data.width;
+              const scaleY = canvas.height / data.height;
+
+              // 라인 단위로 처리
+              const lines = data.lines || [];
+              const cleanedLines = [];
+
+              lines.forEach((line) => {
+                if (!line.bbox || !line.text) return;
+
+                const cleanedText = cleanOcrText(line.text);
+                if (!cleanedText) return; // 빈 텍스트 제외
+
+                const x0 = Math.round(line.bbox.x0 * scaleX);
+                const y0 = Math.round(line.bbox.y0 * scaleY);
+                const x1 = Math.round(line.bbox.x1 * scaleX);
+                const y1 = Math.round(line.bbox.y1 * scaleY);
+
+                textRegions.push({
+                  text: cleanedText,
+                  x0,
+                  y0,
+                  x1,
+                  y1,
+                });
+
+                cleanedLines.push(cleanedText);
+              });
+
+              // 정리된 텍스트 표시
+              resultTextarea.value = cleanedLines.join("\n");
+
+              // 바운딩 박스 그리기 (이미지 렌더링 완료 후)
+              if (textRegions.length > 0) {
+                // 다음 프레임에서 바운딩 박스 그리기 (렌더링 완료 보장)
+                requestAnimationFrame(() => {
+                  drawBoundingBoxes();
+                });
+
+                // 캔버스 클릭 이벤트 추가 (원본과 오버레이 모두)
+                canvas.style.cursor = "pointer";
+                canvas.onclick = handleCanvasClick;
+
+                const overlayCanvas = document.getElementById("overlayCanvas");
+                if (overlayCanvas) {
+                  overlayCanvas.style.cursor = "pointer";
+                  overlayCanvas.onclick = handleCanvasClick;
+                }
+              }
+
+              status.textContent = `완료! (${textRegions.length}개 텍스트 영역 인식)`;
+            } catch (error) {
+              console.error("OCR 오류:", error);
+              status.textContent = "오류 발생: " + error.message;
+            }
+          }, "image/png");
+        };
+        img.src = imgUrl;
+      }
+
+      // 파일 입력 이벤트
+      document.getElementById("ocrInput").onchange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        await processImage(file);
       };
+
+      // 붙여넣기 이벤트 처리
+      document.addEventListener("paste", async (e) => {
+        // 모달이 열려있으면 붙여넣기 무시
+        const modal = document.getElementById("editModal");
+        if (modal.classList.contains("active")) {
+          return;
+        }
+
+        const items = e.clipboardData.items;
+        for (let i = 0; i < items.length; i++) {
+          if (items[i].type.indexOf("image") !== -1) {
+            e.preventDefault();
+            const blob = items[i].getAsFile();
+            await processImage(blob);
+            showNotification("이미지가 붙여넣기되었습니다!", "success");
+            break;
+          }
+        }
+      });
+
+      // 배경색 추출 함수
+      function getAverageColor(ctx, x, y, width, height) {
+        // getImageData는 정수 좌표만 받을 수 있음
+        const intX = Math.round(x);
+        const intY = Math.round(y);
+        const intWidth = Math.round(width);
+        const intHeight = Math.round(height);
+
+        // 유효한 범위인지 확인
+        if (intWidth <= 0 || intHeight <= 0) {
+          return { r: 255, g: 255, b: 255 }; // 기본값
+        }
+
+        const imageData = ctx.getImageData(intX, intY, intWidth, intHeight);
+        const data = imageData.data;
+        let r = 0,
+          g = 0,
+          b = 0,
+          count = 0;
+
+        for (let i = 0; i < data.length; i += 4) {
+          r += data[i];
+          g += data[i + 1];
+          b += data[i + 2];
+          count++;
+        }
+
+        return {
+          r: Math.round(r / count),
+          g: Math.round(g / count),
+          b: Math.round(b / count),
+        };
+      }
+
+      // 텍스트를 이미지에 적용
+      function applyTextToImage() {
+        if (!originalImageData || textRegions.length === 0) return;
+
+        const canvas = document.getElementById("previewCanvas");
+        const ctx = canvas.getContext("2d");
+        const resultTextarea = document.getElementById("ocrResult");
+        const newText = resultTextarea.value;
+        const downloadBtn = document.getElementById("downloadBtn");
+
+        // 원본 이미지 다시 그리기
+        ctx.putImageData(originalImageData, 0, 0);
+
+        // 임시 캔버스에 원본 이미지 복사 (배경색 추출용)
+        const tempCanvas = document.createElement("canvas");
+        tempCanvas.width = canvas.width;
+        tempCanvas.height = canvas.height;
+        const tempCtx = tempCanvas.getContext("2d");
+        tempCtx.putImageData(originalImageData, 0, 0);
+
+        const newTextLines = newText.split("\n").filter((line) => line.trim());
+
+        // textRegions를 사용하여 텍스트 적용
+        textRegions.forEach((region, index) => {
+          const x0 = region.x0;
+          const y0 = region.y0;
+          const x1 = region.x1;
+          const y1 = region.y1;
+          const width = x1 - x0;
+          const height = y1 - y0;
+
+          // 주변 배경색 추출 (약간 넓은 영역에서)
+          const padding = Math.max(5, Math.min(width, height) * 0.2);
+          const bgX = Math.max(0, x0 - padding);
+          const bgY = Math.max(0, y0 - padding);
+          const bgW = Math.min(canvas.width - bgX, width + padding * 2);
+          const bgH = Math.min(canvas.height - bgY, height + padding * 2);
+
+          const bgColor = getAverageColor(tempCtx, bgX, bgY, bgW, bgH);
+
+          // 배경색으로 영역 칠하기
+          ctx.save();
+          ctx.fillStyle = `rgb(${bgColor.r}, ${bgColor.g}, ${bgColor.b})`;
+          ctx.fillRect(x0, y0, width, height);
+
+          // 텍스트 그리기
+          const fontSize = Math.max(14, Math.min(height * 0.8, width / 10));
+          ctx.font = `bold ${fontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans KR", "Malgun Gothic", sans-serif`;
+
+          // 텍스트 색상 결정 (배경이 밝으면 검은색, 어두우면 흰색)
+          const brightness = (bgColor.r + bgColor.g + bgColor.b) / 3;
+          ctx.fillStyle = brightness > 128 ? "#000000" : "#FFFFFF";
+          ctx.textBaseline = "middle";
+          ctx.textAlign = "left";
+
+          // 텍스트 내용 가져오기 (새 텍스트가 있으면 사용, 없으면 원본 사용)
+          const text =
+            index < newTextLines.length ? newTextLines[index] : region.text;
+          if (text && text.trim()) {
+            // 텍스트가 박스 너비를 넘지 않도록 처리
+            const maxWidth = width * 0.9;
+            let displayText = text.trim();
+            const metrics = ctx.measureText(displayText);
+            if (metrics.width > maxWidth) {
+              // 텍스트가 너무 길면 축소
+              while (
+                ctx.measureText(displayText + "...").width > maxWidth &&
+                displayText.length > 1
+              ) {
+                displayText = displayText.slice(0, -1);
+              }
+              displayText += "...";
+            }
+            ctx.fillText(
+              displayText,
+              x0 + Math.max(2, width * 0.05),
+              y0 + height / 2
+            );
+          }
+
+          ctx.restore();
+        });
+
+        // 바운딩 박스 다시 그리기
+        drawBoundingBoxes();
+
+        downloadBtn.style.display = "inline-block";
+      }
+
+      // 이미지 다운로드
+      function downloadImage() {
+        const canvas = document.getElementById("previewCanvas");
+        canvas.toBlob((blob) => {
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = "edited_image.png";
+          a.click();
+          URL.revokeObjectURL(url);
+        });
+      }
+
+      // 클립보드로 복사
+      async function copyToClipboard() {
+        const text = document.getElementById("ocrResult").value;
+        if (!text.trim()) {
+          showNotification("복사할 텍스트가 없습니다", "error");
+          return;
+        }
+
+        try {
+          await navigator.clipboard.writeText(text);
+          showNotification("클립보드에 복사되었습니다!", "success");
+        } catch (err) {
+          // Fallback for older browsers
+          const textarea = document.createElement("textarea");
+          textarea.value = text;
+          textarea.style.position = "fixed";
+          textarea.style.opacity = "0";
+          document.body.appendChild(textarea);
+          textarea.select();
+          try {
+            document.execCommand("copy");
+            showNotification("클립보드에 복사되었습니다!", "success");
+          } catch (e) {
+            showNotification("복사에 실패했습니다", "error");
+          }
+          document.body.removeChild(textarea);
+        }
+      }
+
+      // 알림 표시 함수
+      function showNotification(message, type = "success") {
+        const notification = document.createElement("div");
+        notification.className = `fixed top-4 right-4 px-6 py-3 rounded-lg shadow-lg z-50 transition-all ${
+          type === "success"
+            ? "bg-green-500 text-white"
+            : "bg-red-500 text-white"
+        }`;
+        notification.textContent = message;
+        document.body.appendChild(notification);
+
+        setTimeout(() => {
+          notification.style.opacity = "0";
+          notification.style.transform = "translateX(100%)";
+          setTimeout(() => {
+            document.body.removeChild(notification);
+          }, 300);
+        }, 2000);
+      }
     </script>
   </body>
 </html>
