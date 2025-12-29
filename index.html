@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>사진 글자 추출 · 파일 이름 일괄 변경</title>
+
+    <!-- SEO -->
+    <meta
+      name="description"
+      content="사진에서 글자 추출(OCR) + 파일 이름 일괄 변경. 설치 없이 무료로 바로 사용하세요."
+    />
+    <meta
+      name="keywords"
+      content="사진 글자 추출, 이미지 텍스트 변환, OCR, 파일 이름 변경, 파일명 일괄 변경"
+    />
+
+    <!-- OG -->
+    <meta property="og:title" content="사진 글자 추출 · 파일 이름 일괄 변경" />
+    <meta
+      property="og:description"
+      content="이미지에서 글자 복사, 여러 파일 이름을 한 번에 변경하세요."
+    />
+    <meta
+      property="og:image"
+      content="https://dummyimage.com/1200x630/0b1220/ffffff&text=OCR+%26+Rename"
+    />
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+
+    <style>
+      body {
+        background: #0b1220;
+        color: white;
+      }
+      .tab-active {
+        background: #22c55e;
+        color: #0b1220;
+      }
+    </style>
+  </head>
+
+  <body class="max-w-4xl mx-auto px-4 py-10">
+    <h1 class="text-3xl font-extrabold mb-6">
+      📸 사진 글자 추출 & 📁 파일 이름 변경
+    </h1>
+
+    <!-- Tabs -->
+    <div class="flex gap-2 mb-6">
+      <button id="tabOcr" class="px-4 py-2 rounded tab-active">
+        이미지 → 텍스트
+      </button>
+      <button id="tabRename" class="px-4 py-2 rounded bg-white/10">
+        파일 이름 변경
+      </button>
+    </div>
+
+    <!-- OCR -->
+    <section id="ocrSection">
+      <div class="bg-white/5 border border-white/10 rounded-xl p-4">
+        <input type="file" id="ocrInput" accept="image/*" />
+        <button
+          id="ocrBtn"
+          class="mt-3 px-4 py-2 rounded bg-green-500 text-black font-semibold"
+        >
+          텍스트 추출
+        </button>
+
+        <div id="ocrStatus" class="text-sm text-white/70 mt-3"></div>
+
+        <textarea
+          id="ocrResult"
+          class="w-full h-40 mt-4 p-3 bg-black/30 border border-white/10 rounded"
+          placeholder="추출된 텍스트가 여기에 표시됩니다"
+        ></textarea>
+
+        <button onclick="copyText()" class="mt-2 px-3 py-1 rounded bg-white/10">
+          📋 복사
+        </button>
+      </div>
+    </section>
+
+    <!-- Rename -->
+    <section id="renameSection" class="hidden">
+      <div class="bg-white/5 border border-white/10 rounded-xl p-4 space-y-4">
+        <input type="file" id="renameInput" multiple />
+
+        <select
+          id="rule"
+          class="w-full p-2 rounded bg-black/30 border border-white/10"
+        >
+          <option value="date">날짜_번호</option>
+          <option value="prefix">Prefix_번호</option>
+          <option value="number">번호만</option>
+        </select>
+
+        <input
+          id="prefixInput"
+          placeholder="prefix 입력 (옵션)"
+          class="w-full p-2 rounded bg-black/30 border border-white/10"
+        />
+
+        <ul id="preview" class="text-sm text-white/70"></ul>
+
+        <button
+          id="zipBtn"
+          class="px-4 py-2 rounded bg-green-500 text-black font-semibold"
+        >
+          ZIP 다운로드
+        </button>
+      </div>
+    </section>
+
+    <script>
+      /* Tabs */
+      const tabOcr = document.getElementById("tabOcr");
+      const tabRename = document.getElementById("tabRename");
+      const ocrSection = document.getElementById("ocrSection");
+      const renameSection = document.getElementById("renameSection");
+
+      tabOcr.onclick = () => {
+        tabOcr.classList.add("tab-active");
+        tabRename.classList.remove("tab-active");
+        ocrSection.classList.remove("hidden");
+        renameSection.classList.add("hidden");
+      };
+      tabRename.onclick = () => {
+        tabRename.classList.add("tab-active");
+        tabOcr.classList.remove("tab-active");
+        renameSection.classList.remove("hidden");
+        ocrSection.classList.add("hidden");
+      };
+
+      /* OCR */
+      document.getElementById("ocrBtn").onclick = async () => {
+        const file = document.getElementById("ocrInput").files[0];
+        if (!file) return alert("이미지를 선택하세요");
+
+        const status = document.getElementById("ocrStatus");
+        status.textContent = "글자 읽는 중...";
+
+        const { data } = await Tesseract.recognize(file, "kor+eng");
+        document.getElementById("ocrResult").value = data.text;
+        status.textContent = "완료!";
+      };
+
+      function copyText() {
+        const ta = document.getElementById("ocrResult");
+        ta.select();
+        document.execCommand("copy");
+        alert("복사됨");
+      }
+
+      /* Rename */
+      document.getElementById("renameInput").onchange = previewNames;
+      document.getElementById("rule").onchange = previewNames;
+      document.getElementById("prefixInput").oninput = previewNames;
+
+      function previewNames() {
+        const files = [...document.getElementById("renameInput").files];
+        const rule = document.getElementById("rule").value;
+        const prefix = document.getElementById("prefixInput").value;
+        const ul = document.getElementById("preview");
+        ul.innerHTML = "";
+
+        files.forEach((f, i) => {
+          const ext = f.name.split(".").pop();
+          let name = "";
+
+          if (rule === "date") {
+            const d = new Date().toISOString().slice(0, 10);
+            name = `${d}_${String(i + 1).padStart(2, "0")}.${ext}`;
+          } else if (rule === "prefix") {
+            name = `${prefix || "file"}_${String(i + 1).padStart(
+              2,
+              "0"
+            )}.${ext}`;
+          } else {
+            name = `${String(i + 1).padStart(2, "0")}.${ext}`;
+          }
+
+          ul.innerHTML += `<li>${f.name} → <b>${name}</b></li>`;
+        });
+      }
+
+      document.getElementById("zipBtn").onclick = async () => {
+        const files = [...document.getElementById("renameInput").files];
+        if (!files.length) return alert("파일 없음");
+
+        const zip = new JSZip();
+        const rule = document.getElementById("rule").value;
+        const prefix = document.getElementById("prefixInput").value;
+
+        for (let i = 0; i < files.length; i++) {
+          const f = files[i];
+          const ext = f.name.split(".").pop();
+          let name = "";
+
+          if (rule === "date") {
+            const d = new Date().toISOString().slice(0, 10);
+            name = `${d}_${String(i + 1).padStart(2, "0")}.${ext}`;
+          } else if (rule === "prefix") {
+            name = `${prefix || "file"}_${String(i + 1).padStart(
+              2,
+              "0"
+            )}.${ext}`;
+          } else {
+            name = `${String(i + 1).padStart(2, "0")}.${ext}`;
+          }
+
+          zip.file(name, f);
+        }
+
+        const blob = await zip.generateAsync({ type: "blob" });
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = "renamed_files.zip";
+        a.click();
+      };
+    </script>
+  </body>
+</html>
